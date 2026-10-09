@@ -1,0 +1,21 @@
+{
+  "name": "proyecto2627",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/ManuelSerranoRubio/Procesos2627#readme",
+  "bugs": {
+    "url": "https://github.com/ManuelSerranoRubio/Procesos2627/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ManuelSerranoRubio/Procesos2627.git"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/api.js",
+    "testW": "jasmine-node server",
+    "test": "jasmine-node server"
+  }
+}
