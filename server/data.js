@@ -9,7 +9,7 @@ class CAD {
 
     async connect(callback) {
         let cad = this;
-        let client = new mongo("mongodb+srv://manuelserrano10_db_user:5ymQpLsrjrQFFvYV@cluster0.bhuyt2v.mongodb.net/?retryWrites = true & w=majority");
+        let client = new mongo("mongodb+srv://manuelserrano10_db_user:xxxx@cluster0.bhuyt2v.mongodb.net/?retryWrites = true & w=majority");
         await client.connect();
         const database = client.db("sistema");
         cad.usuarios = database.collection("usuarios");
