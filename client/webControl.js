@@ -23,6 +23,21 @@ class webControl {
             rest.listUsers();
         });
     }
+
+    showRegisterForm() {
+        $("#registerForm").remove();
+        $("#register").load("./client/register.html", function () {
+            $("#registerButton").on("click", function (e) {
+                e.preventDefault();
+                let email = $("#email").val();
+                let pwd = $("#pwd").val();
+                if (email && pwd) {
+                    //rest.registrarUsuario(nick);
+                    console.log(email + " " + pwd);
+                }
+            });
+        });
+    }
     checkUser() {
         let nick = $.cookie("nick");
         if (nick) {

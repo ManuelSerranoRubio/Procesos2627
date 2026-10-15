@@ -17,5 +17,9 @@
     "start": "node server/api.js",
     "testW": "jasmine-node server",
     "test": "jasmine-node server"
+  },
+  "dependencies": {
+    "body-parser": "^2.3.0",
+    "passport-google-one-tap": "^1.0.1"
   }
 }

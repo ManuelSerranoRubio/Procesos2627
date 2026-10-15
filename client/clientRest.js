@@ -42,6 +42,30 @@ class clientRest {
             console.log("User exists: ", data);
         });
     }
+
+    registerUser(email, password) {
+        $.ajax({
+            type: 'POST',
+            url: '/registerUser',
+            data: JSON.stringify({ "email": email, "password": password }),
+            success: function (data) {
+                if (data.nick == -1) {
+                    console.log("User " + data.nick + " has been registered");
+                    $.cookie("nick", data.nick);
+                    console.log("Welcome to the system" + data.nick)
+                    //cw.mostrarLogin();
+                }
+                else {
+                    console.log("That nickname is aleady in use");
+                }
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                console.log("Status: " + textStatus);
+                console.log("Error: " + errorThrown);
+            },
+            contentType: 'application/json'
+        });
+    }
 }
 
 module.exports.clientRest = clientRest

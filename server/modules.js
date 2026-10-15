@@ -1,7 +1,20 @@
+const data = require("./data.js");
+
 class System {
     users = [];
+    cad;
     constructor() {
         this.users = [];
+        this.cad = new data.CAD;
+        this.cad.connect(function (db) {
+            console.log("Conectado a Mongo Atlas");
+        });
+    }
+
+    googleUser(usr, callback) {
+        this.cad.findOrCreateUser(usr, function (obj) {
+            callback(obj);
+        });
     }
 
     addUser(nick) {
@@ -62,7 +75,27 @@ class System {
         return false;
 
     }
+
+    registerUser(obj, callback) {
+        let module = this;
+        if (!obj.nick) {
+            obj.nick = obj.email;
+        }
+
+        this.cad.searchUser(obj, function (usr) {
+            if (!usr) {
+                module.cad.insertUser(obj, function (res) {
+                    callback(res);
+                });
+            }
+            else {
+                callback({ "email": -1 });
+            }
+        });
+    }
+
 }
+
 class User {
     nick;
     constructor(nick) {
