@@ -11,8 +11,8 @@ class CAD {
         let cad = this;
         let client = new mongo("mongodb+srv://manuelserrano10_db_user:xxxx@cluster0.bhuyt2v.mongodb.net/?retryWrites = true & w=majority");
         await client.connect();
-        const database = client.db("sistema");
-        cad.usuarios = database.collection("usuarios");
+        const database = client.db("system");
+        cad.users = database.collection("users");
         callback(database);
     }
 
