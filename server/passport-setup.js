@@ -1,33 +1,27 @@
-const passport = require("passport");
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const GoogleOneTapStrategy = require("passport-google-one-tap").GoogleOneTapStrategy;
-passport.serializeUser(function (user, done) {
-    done(null, user);
-});
-passport.deserializeUser(function (user, done) {
-    done(null, user);
-});
-passport.use(new GoogleStrategy({
-    clientID: "xxxxxxxxxxx",
-    clientSecret: "xxxxxxxxxxx",
-    callbackURL: "http://localhost:3000/google/callback"
-},
-    function (accessToken, refreshToken, profile, done) {
-        return done(null, profile);
-    }
-));
+// Configuración del proveedor externo (Google OAuth 2.0).
+// Las credenciales se leen del entorno: GOOGLE_CLIENT_ID,
+// GOOGLE_CLIENT_SECRET y GOOGLE_CALLBACK_URL.
+const passport = require('passport');
+const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
 
-passport.use(
-    new GoogleOneTapStrategy(
-        {
-            //client_id:"xxxxxxx.apps.googleusercontent.com", //local
-            client_id: "xxxxxx.apps.googleusercontent.com", //prod-oneTap
-            //clientSecret: "xxxx", //local
-            clientSecret: "xxxxxxxxxxx", // prod-oneTap
-            verifyCsrfToken: false, // whether to validate the csrf token or not
-        },
-        function (profile, done) {
-            return done(null, profile);
-        }
-    )
-)
+function configurePassport(config) {
+  if (!config.googleClientId || !config.googleClientSecret || !config.googleCallbackUrl) {
+    return false;
+  }
+
+  passport.use(new GoogleStrategy({
+    clientID: config.googleClientId,
+    clientSecret: config.googleClientSecret,
+    callbackURL: config.googleCallbackUrl,
+  }, (accessToken, refreshToken, profile, done) => {
+    // Perfil mínimo: sólo necesitamos el correo para dar de alta al usuario.
+    done(null, {
+      email: profile.emails?.[0]?.value,
+      provider: 'google',
+      providerId: profile.id,
+    });
+  }));
+  return true;
+}
+
+module.exports = { configurePassport };
