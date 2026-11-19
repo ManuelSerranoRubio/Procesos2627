@@ -1,0 +1,15 @@
+body {
+  background-color: #f7f8fa;
+}
+
+.card-header {
+  font-weight: 600;
+}
+
+#sessionInfo {
+  margin-right: .5rem;
+}
+
+#msg[hidden], [hidden] {
+  display: none !important;
+}
