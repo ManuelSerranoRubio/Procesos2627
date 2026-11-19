@@ -1,69 +1,100 @@
-const mongo = require("mongodb").MongoClient;
-const ObjectId = require("mongodb").ObjectId;
+// CAPA DE ACCESO A DATOS.
+// La lógica de negocio no conoce MongoDB: sólo usa estos repositorios.
+// Eso permite probar la lógica con un repositorio en memoria y cambiar
+// a persistencia real sin modificar server/logic.js.
+const { MongoClient } = require('mongodb');
 
-class CAD {
-    users = [];
-    constructor() {
-        this.users = [];
-    }
+class InMemoryUserRepository {
+  constructor() {
+    this.users = new Map();
+  }
 
-    async connect(callback) {
-        let cad = this;
-        let client = new mongo("mongodb+srv://manuelserrano10_db_user:xxxx@cluster0.bhuyt2v.mongodb.net/?retryWrites = true & w=majority");
-        await client.connect();
-        const database = client.db("system");
-        cad.users = database.collection("users");
-        callback(database);
-    }
+  async findByEmail(email) {
+    const normalized = String(email).toLowerCase();
+    return [...this.users.values()].find((u) => u.email === normalized) || null;
+  }
 
-    searchUser(obj, callback) {
-        search(this.usuarios, obj, callback);
-    }
-    insertUser(usuario, callback) {
-        insert(this.usuarios, usuario, callback);
-    }
+  async findById(id) {
+    return this.users.get(id) || null;
+  }
 
+  async findByConfirmationToken(token) {
+    if (!token) return null;
+    return [...this.users.values()].find((u) => u.confirmationToken === token) || null;
+  }
 
-    search(collection, criteria, callback) {
-        collection.find(criteria).toArray(function (error, users) {
-            if (users.length == 0) {
-                callback(undefined);
-            }
-            else {
-                callback(users[0]);
-            }
-        });
-    }
-    insert(collection, element, callback) {
-        collection.insertOne(element, function (err, result) {
-            if (err) {
-                console.log("error");
-            }
-            else {
-                console.log("New element created");
-                callback(element);
-            }
-        });
-    }
+  async create(user) {
+    const stored = { ...user };
+    this.users.set(stored.id, stored);
+    return { ...stored };
+  }
 
-    findOrCreateUser(usr, callback) {
-        findOrCreate(this.users, usr, callback);
-    }
+  async update(id, changes) {
+    const current = this.users.get(id);
+    if (!current) return null;
+    const updated = { ...current, ...changes };
+    this.users.set(id, updated);
+    return { ...updated };
+  }
 
-    findOrCreate(collection, criteria, callback) {
-        collection.findOneAndUpdate(criteria, { $set: criteria }, {
-            upsert: true, returnDocument: "after", projection: { email: 1 }
-        }, function (err, doc) {
-            if (err) { throw err; }
-            else {
-                console.log("Elemento actualizado");
-                console.log(doc.value.email);
-                callback({ email: doc.value.email });
-            }
-        });
-    }
+  async remove(id) {
+    return this.users.delete(id);
+  }
 
-
+  async list() {
+    return [...this.users.values()].map((u) => ({ ...u }));
+  }
 }
 
-module.exports.CAD = CAD
+class MongoUserRepository {
+  constructor(collection) {
+    this.collection = collection;
+  }
+
+  // Devuelve { repository, client } para poder cerrar la conexión al terminar.
+  static async connect(uri, dbName) {
+    const client = new MongoClient(uri);
+    await client.connect();
+    const collection = client.db(dbName).collection('users');
+    await collection.createIndex({ email: 1 }, { unique: true });
+    await collection.createIndex({ confirmationToken: 1 }, { sparse: true });
+    return { repository: new MongoUserRepository(collection), client };
+  }
+
+  async findByEmail(email) {
+    return this.collection.findOne({ email: String(email).toLowerCase() });
+  }
+
+  async findById(id) {
+    return this.collection.findOne({ id });
+  }
+
+  async findByConfirmationToken(token) {
+    if (!token) return null;
+    return this.collection.findOne({ confirmationToken: token });
+  }
+
+  async create(user) {
+    await this.collection.insertOne({ ...user });
+    return user;
+  }
+
+  async update(id, changes) {
+    return this.collection.findOneAndUpdate(
+      { id },
+      { $set: changes },
+      { returnDocument: 'after' },
+    );
+  }
+
+  async remove(id) {
+    const result = await this.collection.deleteOne({ id });
+    return result.deletedCount > 0;
+  }
+
+  async list() {
+    return this.collection.find({}).toArray();
+  }
+}
+
+module.exports = { InMemoryUserRepository, MongoUserRepository };
